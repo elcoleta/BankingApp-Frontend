@@ -11,9 +11,9 @@
         <a class="nav-item active" href="#">
           <span class="nav-icon">⊞</span> Dashboard
         </a>
-        <a class="nav-item" href="#">
-          <span class="nav-icon">↕</span> Transactions
-        </a>
+      <RouterLink class="nav-item" to="/transactions">
+  <span class="nav-icon">↕</span> Transactions
+</RouterLink>
         <a class="nav-item" href="#">
           <span class="nav-icon">➜</span> Transfer
         </a>
