@@ -65,8 +65,16 @@ async function handleSubmit() {
       username: username.value,
       password: password.value,
     })
-    userStore.setToken(response.data.token)
-    router.push('/dashboard')
+
+    // Store token, role, and username from the new JWT response
+    userStore.setToken(response.data.token, response.data.role, response.data.username)
+
+    // Route based on role
+    if (response.data.role === 'EMPLOYEE') {
+      router.push('/employee-dashboard')
+    } else {
+      router.push('/dashboard')
+    }
   } catch (err) {
     console.error('Auth request failed', err.response || err)
 

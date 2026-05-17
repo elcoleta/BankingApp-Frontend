@@ -8,15 +8,18 @@
         <span class="logo-name">BankApp</span>
       </div>
       <nav>
-        <a class="nav-item active" href="#">
+        <RouterLink class="nav-item active" to="/dashboard">
           <span class="nav-icon">⊞</span> Dashboard
-        </a>
-      <RouterLink class="nav-item" to="/transactions">
-  <span class="nav-icon">↕</span> Transactions
-</RouterLink>
-        <a class="nav-item" href="#">
+        </RouterLink>
+        <RouterLink class="nav-item" to="/transactions">
+          <span class="nav-icon">↕</span> Transactions
+        </RouterLink>
+        <RouterLink class="nav-item" to="/transfer">
           <span class="nav-icon">➜</span> Transfer
-        </a>
+        </RouterLink>
+        <RouterLink class="nav-item" to="/atm">
+          <span class="nav-icon">🏧</span> ATM
+        </RouterLink>
       </nav>
       <button class="logout-btn" @click="handleLogout">Logout</button>
     </aside>
@@ -95,10 +98,10 @@ const totalBalance = computed(() =>
 )
 
 onMounted(async () => {
-  try {
-    const meResponse = await api.get('/api/me')
-    username.value = meResponse.data.username
+  // Display the username stored at login time
+  username.value = userStore.username || 'User'
 
+  try {
     const accountsResponse = await api.get('/accounts/my')
     accounts.value = accountsResponse.data
   } catch (err) {
@@ -190,7 +193,8 @@ nav {
   color: white;
 }
 
-.nav-item.active {
+.nav-item.active,
+.nav-item.router-link-active {
   background: #126660;
   color: white;
 }

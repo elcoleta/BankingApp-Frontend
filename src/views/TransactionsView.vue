@@ -8,9 +8,18 @@
         <span class="logo-name">BankApp</span>
       </div>
       <nav>
-        <a class="nav-item" href="#/dashboard">⊞ Dashboard</a>
-        <a class="nav-item active" href="#/transactions">↕ Transactions</a>
-        <a class="nav-item" href="#">➜ Transfer</a>
+        <RouterLink class="nav-item" to="/dashboard">
+          <span class="nav-icon">⊞</span> Dashboard
+        </RouterLink>
+        <RouterLink class="nav-item active" to="/transactions">
+          <span class="nav-icon">↕</span> Transactions
+        </RouterLink>
+        <RouterLink class="nav-item" to="/transfer">
+          <span class="nav-icon">➜</span> Transfer
+        </RouterLink>
+        <RouterLink class="nav-item" to="/atm">
+          <span class="nav-icon">🏧</span> ATM
+        </RouterLink>
       </nav>
       <button class="logout-btn" @click="handleLogout">Logout</button>
     </aside>
@@ -211,10 +220,16 @@ nav {
   font-size: 0.92rem;
   font-weight: 500;
   text-decoration: none;
+  transition: background 0.15s, color 0.15s;
 }
 
 .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
-.nav-item.active { background: #126660; color: white; }
+
+.nav-item.active,
+.nav-item.router-link-active {
+  background: #126660;
+  color: white;
+}
 
 .logout-btn {
   margin-top: auto;
