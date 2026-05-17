@@ -21,11 +21,34 @@
         <h1>Transaction History</h1>
       </header>
 
+      <!-- Filters -->
+      <div class="filters">
+        <input
+          v-model="searchIban"
+          type="text"
+          placeholder="Search by IBAN..."
+        />
+        <input
+          v-model="minAmount"
+          type="number"
+          placeholder="Min amount"
+        />
+        <input
+          v-model="maxAmount"
+          type="number"
+          placeholder="Max amount"
+        />
+        <button @click="resetFilters">Reset</button>
+      </div>
+
       <p v-if="loading" class="status-msg">Loading transactions…</p>
       <p v-else-if="error" class="status-msg error">{{ error }}</p>
 
       <div v-else class="table-wrapper">
-        <table>
+        <p v-if="filteredTransactions.length === 0" class="status-msg">
+          No transactions match your search.
+        </p>
+        <table v-else>
           <thead>
             <tr>
               <th>Date</th>
@@ -36,7 +59,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="transaction in transactions" :key="transaction.id">
+            <tr v-for="transaction in filteredTransactions" :key="transaction.id">
               <td>{{ formatDate(transaction.timestamp) }}</td>
               <td>{{ transaction.description }}</td>
               <td class="iban">{{ transaction.fromIban }}</td>
@@ -54,7 +77,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/axios'
 import { useUserStore } from '@/stores/user'
@@ -67,13 +90,30 @@ const myIbans = ref([])
 const loading = ref(true)
 const error = ref('')
 
+// Filter values
+const searchIban = ref('')
+const minAmount = ref('')
+const maxAmount = ref('')
+
+// Filtered list — recalculates automatically when filters or transactions change
+const filteredTransactions = computed(() => {
+  return transactions.value.filter(t => {
+    const matchesIban = searchIban.value === '' ||
+      t.fromIban.includes(searchIban.value.toUpperCase()) ||
+      t.toIban.includes(searchIban.value.toUpperCase())
+
+    const matchesMin = minAmount.value === '' || t.amount >= Number(minAmount.value)
+    const matchesMax = maxAmount.value === '' || t.amount <= Number(maxAmount.value)
+
+    return matchesIban && matchesMin && matchesMax
+  })
+})
+
 onMounted(async () => {
   try {
-    // Get user's own IBANs to detect incoming vs outgoing
     const accountsResponse = await api.get('/accounts/my')
     myIbans.value = accountsResponse.data.map(a => a.iban)
 
-    // Get transactions
     const transactionsResponse = await api.get('/transactions/my')
     transactions.value = transactionsResponse.data
   } catch (err) {
@@ -88,16 +128,20 @@ onMounted(async () => {
   }
 })
 
-// True if money is coming IN to the user
 function isIncoming(transaction) {
   return myIbans.value.includes(transaction.toIban)
 }
 
-// Format date nicely
 function formatDate(timestamp) {
   return new Date(timestamp).toLocaleDateString('nl-NL', {
     day: '2-digit', month: 'short', year: 'numeric'
   })
+}
+
+function resetFilters() {
+  searchIban.value = ''
+  minAmount.value = ''
+  maxAmount.value = ''
 }
 
 function handleLogout() {
@@ -167,7 +211,6 @@ nav {
   font-size: 0.92rem;
   font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
 }
 
 .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
@@ -201,6 +244,44 @@ h1 {
   color: #0d2b36;
 }
 
+/* Filters */
+.filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filters input {
+  padding: 10px 14px;
+  border: 1px solid #dce5e8;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  color: #0d2b36;
+  background: white;
+  flex: 1;
+  min-width: 160px;
+}
+
+.filters input:focus {
+  outline: none;
+  border-color: #126660;
+}
+
+.filters button {
+  padding: 10px 20px;
+  background: #0d2b36;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.filters button:hover { background: #126660; }
+
+/* Table */
 .table-wrapper {
   background: white;
   border-radius: 14px;
