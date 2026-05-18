@@ -8,7 +8,7 @@
         <span class="logo-name">BankApp</span>
       </div>
       <nav>
-        <a class="nav-item active" href="#">
+        <a class="nav-item active" href="#/dashboard">
           <span class="nav-icon">⊞</span> Dashboard
         </a>
       <RouterLink class="nav-item" to="/transactions">
@@ -97,7 +97,7 @@ const totalBalance = computed(() =>
 onMounted(async () => {
   try {
     const meResponse = await api.get('/api/me')
-    username.value = meResponse.data.username
+    username.value = meResponse.data.email
 
     const accountsResponse = await api.get('/accounts/my')
     accounts.value = accountsResponse.data

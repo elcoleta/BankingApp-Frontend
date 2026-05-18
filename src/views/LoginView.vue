@@ -9,10 +9,49 @@
         </div>
       </div>
 
-      <form @submit.prevent="handleSubmit">
+      <!-- Success message after registration -->
+      <div v-if="registered" class="success-banner">
+        Registration successful! Your account is pending employee approval. You can log in once approved.
+      </div>
+
+      <form v-if="!registered" @submit.prevent="handleSubmit">
+        <!-- Registration-only fields -->
+        <template v-if="isRegistering">
+          <div class="row-2">
+            <label>
+              First name
+              <input v-model="firstName" type="text" autocomplete="given-name" required />
+            </label>
+            <label>
+              Last name
+              <input v-model="lastName" type="text" autocomplete="family-name" required />
+            </label>
+          </div>
+
+          <label>
+            BSN
+            <input
+              v-model="bsn"
+              type="text"
+              inputmode="numeric"
+              maxlength="9"
+              placeholder="9-digit number"
+              pattern="\d{9}"
+              title="BSN must be exactly 9 digits"
+              required
+            />
+          </label>
+
+          <label>
+            Phone number
+            <input v-model="phoneNumber" type="tel" autocomplete="tel" required />
+          </label>
+        </template>
+
+        <!-- Shared fields -->
         <label>
-          Username
-          <input v-model="username" type="text" autocomplete="username" required />
+          Email address
+          <input v-model="email" type="email" autocomplete="email" required />
         </label>
 
         <label>
@@ -29,12 +68,12 @@
         <p v-if="error" class="error">{{ error }}</p>
 
         <button type="submit" :disabled="isLoading">
-          {{ isLoading ? 'Please wait' : isRegistering ? 'Create account' : 'Login' }}
+          {{ isLoading ? 'Please wait…' : isRegistering ? 'Create account' : 'Login' }}
         </button>
       </form>
 
       <button class="mode-button" type="button" @click="toggleMode">
-        {{ isRegistering ? 'Use an existing account' : 'Create a new account' }}
+        {{ isRegistering ? 'Already have an account? Sign in' : registered ? 'Sign in to your account' : 'Create a new account' }}
       </button>
     </section>
   </div>
@@ -49,34 +88,57 @@ import api from '@/utils/axios'
 const router = useRouter()
 const userStore = useUserStore()
 
-const username = ref('')
+const email = ref('')
 const password = ref('')
+const firstName = ref('')
+const lastName = ref('')
+const bsn = ref('')
+const phoneNumber = ref('')
 const error = ref('')
 const isRegistering = ref(false)
 const isLoading = ref(false)
+const registered = ref(false)
 
 async function handleSubmit() {
   error.value = ''
   isLoading.value = true
 
   try {
-    const endpoint = isRegistering.value ? '/auth/register' : '/auth/login'
-    const response = await api.post(endpoint, {
-      username: username.value,
-      password: password.value,
-    })
-    userStore.setToken(response.data.token)
-    router.push('/dashboard')
-  } catch (err) {
-    console.error('Auth request failed', err.response || err)
+    if (isRegistering.value) {
+      await api.post('/auth/register', {
+        firstName: firstName.value.trim(),
+        lastName: lastName.value.trim(),
+        email: email.value.trim(),
+        bsn: bsn.value.trim(),
+        phoneNumber: phoneNumber.value.trim(),
+        password: password.value,
+      })
+      registered.value = true
+      isRegistering.value = false
+    } else {
+      const response = await api.post('/auth/login', {
+        email: email.value.trim(),
+        password: password.value,
+      })
+      userStore.setSession(response.data.token, response.data.status, response.data.role)
 
+      if (response.data.role === 'EMPLOYEE') {
+        router.push('/employee/dashboard')
+      } else if (response.data.status === 'APPROVED') {
+        router.push('/dashboard')
+      } else {
+        router.push('/pending')
+      }
+    }
+  } catch (err) {
     if (!err.response) {
       error.value = 'Cannot reach backend at http://localhost:8090'
+    } else if (err.response.status === 409 || err.response.status === 401) {
+      error.value = err.response.data?.message || 'Request failed'
     } else {
       error.value =
         err.response.data?.message ||
-        err.response.data?.error ||
-        `${isRegistering.value ? 'Create account' : 'Login'} failed (${err.response.status})`
+        `${isRegistering.value ? 'Registration' : 'Login'} failed (${err.response.status})`
     }
   } finally {
     isLoading.value = false
@@ -84,7 +146,13 @@ async function handleSubmit() {
 }
 
 function toggleMode() {
-  isRegistering.value = !isRegistering.value
+  if (registered.value) {
+    // coming from success banner — go to login, don't toggle to register
+    registered.value = false
+    isRegistering.value = false
+  } else {
+    isRegistering.value = !isRegistering.value
+  }
   error.value = ''
 }
 </script>
@@ -102,7 +170,7 @@ function toggleMode() {
 }
 
 .login-panel {
-  width: min(100%, 420px);
+  width: min(100%, 480px);
   padding: 28px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.96);
@@ -125,6 +193,7 @@ function toggleMode() {
   background: #126660;
   color: white;
   font-weight: 800;
+  flex-shrink: 0;
 }
 
 h1,
@@ -146,6 +215,12 @@ form {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 label {
@@ -199,5 +274,20 @@ button:disabled {
   color: #b42318;
   margin: 0;
   font-size: 0.92rem;
+  padding: 10px 12px;
+  background: #fff1f0;
+  border: 1px solid #ffc9c9;
+  border-radius: 6px;
+}
+
+.success-banner {
+  color: #0d6640;
+  font-size: 0.92rem;
+  padding: 12px 14px;
+  background: #f0fff8;
+  border: 1px solid #b2e5cc;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  line-height: 1.5;
 }
 </style>
