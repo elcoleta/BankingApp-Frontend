@@ -14,6 +14,9 @@
           <span class="nav-icon">⏳</span> Pending Customers
           <span v-if="pendingCount > 0" class="nav-badge">{{ pendingCount }}</span>
         </a>
+        <a class="nav-item" href="#/employee/transactions">
+          <span class="nav-icon">↕</span> Transactions
+        </a>
       </nav>
       <button class="logout-btn" @click="handleLogout">Logout</button>
     </aside>

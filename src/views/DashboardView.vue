@@ -11,12 +11,15 @@
         <a class="nav-item active" href="#/dashboard">
           <span class="nav-icon">⊞</span> Dashboard
         </a>
-      <RouterLink class="nav-item" to="/transactions">
-  <span class="nav-icon">↕</span> Transactions
-</RouterLink>
-        <a class="nav-item" href="#">
+        <RouterLink class="nav-item" to="/transactions">
+          <span class="nav-icon">↕</span> Transactions
+        </RouterLink>
+        <RouterLink class="nav-item" to="/transfer">
           <span class="nav-icon">➜</span> Transfer
-        </a>
+        </RouterLink>
+        <RouterLink class="nav-item" to="/atm">
+          <span class="nav-icon">🏧</span> ATM
+        </RouterLink>
       </nav>
       <button class="logout-btn" @click="handleLogout">Logout</button>
     </aside>
