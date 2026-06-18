@@ -14,6 +14,9 @@
           <span class="nav-icon">⏳</span> Pending Customers
           <span v-if="totalElements > 0" class="nav-badge">{{ totalElements }}</span>
         </a>
+        <a class="nav-item" href="#/employee/transactions">
+          <span class="nav-icon">↕</span> Transactions
+        </a>
       </nav>
       <button class="logout-btn" @click="handleLogout">Logout</button>
     </aside>

@@ -10,7 +10,8 @@
       <nav>
         <a class="nav-item" href="#/dashboard">⊞ Dashboard</a>
         <a class="nav-item active" href="#/transactions">↕ Transactions</a>
-        <a class="nav-item" href="#">➜ Transfer</a>
+        <a class="nav-item" href="#/transfer">➜ Transfer</a>
+        <a class="nav-item" href="#/atm">🏧 ATM</a>
       </nav>
       <button class="logout-btn" @click="handleLogout">Logout</button>
     </aside>
@@ -37,6 +38,16 @@
           v-model="maxAmount"
           type="number"
           placeholder="Max amount"
+        />
+        <input
+          v-model="dateFrom"
+          type="date"
+          title="From date"
+        />
+        <input
+          v-model="dateTo"
+          type="date"
+          title="To date"
         />
         <button @click="resetFilters">Reset</button>
       </div>
@@ -94,6 +105,8 @@ const error = ref('')
 const searchIban = ref('')
 const minAmount = ref('')
 const maxAmount = ref('')
+const dateFrom = ref('')
+const dateTo = ref('')
 
 // Filtered list — recalculates automatically when filters or transactions change
 const filteredTransactions = computed(() => {
@@ -105,7 +118,11 @@ const filteredTransactions = computed(() => {
     const matchesMin = minAmount.value === '' || t.amount >= Number(minAmount.value)
     const matchesMax = maxAmount.value === '' || t.amount <= Number(maxAmount.value)
 
-    return matchesIban && matchesMin && matchesMax
+    const txDate = new Date(t.timestamp)
+    const matchesFrom = dateFrom.value === '' || txDate >= new Date(dateFrom.value)
+    const matchesTo = dateTo.value === '' || txDate <= new Date(dateTo.value + 'T23:59:59')
+
+    return matchesIban && matchesMin && matchesMax && matchesFrom && matchesTo
   })
 })
 
@@ -142,6 +159,8 @@ function resetFilters() {
   searchIban.value = ''
   minAmount.value = ''
   maxAmount.value = ''
+  dateFrom.value = ''
+  dateTo.value = ''
 }
 
 function handleLogout() {
