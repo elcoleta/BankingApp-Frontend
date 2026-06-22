@@ -132,7 +132,7 @@ onMounted(async () => {
     myIbans.value = accountsResponse.data.map(a => a.iban)
 
     const transactionsResponse = await api.get('/transactions/my')
-    transactions.value = transactionsResponse.data
+    transactions.value = transactionsResponse.data.content
   } catch (err) {
     if (err.response?.status === 401) {
       userStore.logout()

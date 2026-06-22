@@ -110,7 +110,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/utils/axios'
 import { useUserStore } from '@/stores/user'
@@ -139,6 +139,22 @@ const selectedAccount = computed(() =>
   accounts.value.find(a => a.iban === fromIban.value) || null
 )
 
+async function fetchTodayUsed() {
+  const iban = fromIban.value
+  if (!iban) { todayUsed.value = 0; return }
+  try {
+    const res = await api.get('/transactions/my', { params: { size: 500, page: 0 } })
+    const today = new Date().toDateString()
+    todayUsed.value = res.data.content
+      .filter(t => t.fromIban === iban && new Date(t.timestamp).toDateString() === today)
+      .reduce((sum, t) => sum + t.amount, 0)
+  } catch {
+    todayUsed.value = 0
+  }
+}
+
+watch(fromIban, fetchTodayUsed)
+
 onMounted(async () => {
   try {
     const res = await api.get('/accounts/my')
@@ -161,13 +177,15 @@ async function submitTransfer() {
       description: description.value || undefined,
     })
     lastAmount.value = amount.value
+    todayUsed.value += parseFloat(amount.value)
     success.value = true
     toIban.value = ''
     amount.value = ''
     description.value = ''
-    // Refresh balances
+    // Refresh balances and daily usage
     const res = await api.get('/accounts/my')
     accounts.value = res.data
+    await fetchTodayUsed()
   } catch (err) {
     errorMsg.value = err.response?.data?.message || 'Transfer failed. Please try again.'
   } finally {
